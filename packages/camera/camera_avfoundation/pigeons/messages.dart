@@ -54,7 +54,7 @@ enum PlatformDeviceOrientation {
 }
 
 // Pigeon version of ExposureMode.
-enum PlatformExposureMode { auto, locked }
+enum PlatformExposureMode { auto, locked, manual }
 
 // Pigeon version of FlashMode.
 enum PlatformFlashMode { off, auto, always, torch }
@@ -130,6 +130,53 @@ class PlatformMediaSettings {
   final int? videoBitrate;
   final int? audioBitrate;
   final bool enableAudio;
+}
+
+// Pigeon version of CameraExposureDescription.
+class PlatformCameraExposureDescription {
+  PlatformCameraExposureDescription({
+    required this.currentExpoOffset,
+    required this.currentExpoTimeNs,
+    required this.currentExpoISO,
+    required this.currentExpoMode,
+    required this.maxExpoTimeNs,
+    required this.minExpoTimeNs,
+    required this.minExpoISO,
+    required this.maxExpoISO,
+    required this.minExpoOffset,
+    required this.maxExpoOffset,
+  });
+
+
+  /// Exposure Mode
+  final PlatformExposureMode currentExpoMode;
+
+  /// Exposure Offset (EV)
+  final double currentExpoOffset;
+  final double minExpoOffset;
+  final double maxExpoOffset;
+
+  /// Exposure ISO
+  final double currentExpoISO;
+  final double minExpoISO;
+  final double maxExpoISO;
+
+  /// Exposure Time(shutter)
+  final int currentExpoTimeNs;
+  final int minExpoTimeNs;
+  final int maxExpoTimeNs;
+
+}
+
+// Pigeon version of ExposureStateValue(setExposureTime).
+class PlatformExposureStateValue{
+  PlatformExposureStateValue({
+    required this.expoTimeNs,
+    required this.expoISO,
+  });
+
+  final int expoTimeNs;
+  final double expoISO;
 }
 
 // Pigeon equivalent of CGPoint.
@@ -303,6 +350,60 @@ abstract class CameraApi {
   @async
   @ObjCSelector('setImageFileFormat:')
   void setImageFileFormat(PlatformImageFileFormat format);
+
+  /// Returns the camera exposure config current description.
+  @async
+  @ObjCSelector('getExposureDescription')
+  PlatformCameraExposureDescription getExposureDescription();
+
+  /// Returns the minimum supported exposure time (duration) in nanoseconds.
+  /// Returns -1 if manual exposure control is not supported.
+  @async
+  @ObjCSelector('getMinimumExposureTime')
+  int getMinExposureTime();
+
+  /// Returns the maximum supported exposure time (duration) in nanoseconds.
+  /// Returns -1 if manual exposure control is not supported.
+  @async
+  @ObjCSelector('getMaximumExposureTime')
+  int getMaxExposureTime();
+
+  /// Returns the current exposure time in nanoseconds.
+  @async
+  @ObjCSelector('getCurrentExposureTime')
+  int getCurrentExposureTime();
+
+  /// Returns the minimum supported ISO value.
+  /// Returns -1 if manual ISO control is not supported.
+  @async
+  @ObjCSelector('getMinimumISO')
+  double getMinISO();
+
+  /// Returns the maximum supported ISO value.
+  /// Returns -1 if manual ISO control is not supported.
+  @async
+  @ObjCSelector('getMaximumISO')
+  double getMaxISO();
+
+  /// Returns the current ISO value.
+  @async
+  @ObjCSelector('getCurrentISO')
+  double getCurrentISO();
+
+  /// Sets the exposure time (shutter speed) manually.
+  ///
+  /// [exposureTime] is the exposure duration in nanoseconds.
+  /// The camera must be in manual exposure mode (ExposureMode.manual).
+  ///
+  /// The value should be between getMinExposureTime() and getMaxExposureTime().
+  ///
+  /// On iOS, this also requires setting an ISO value. If not provided,
+  /// the current ISO will be maintained.
+  ///
+  /// Returns the actual exposure time and iso that was set.
+  @async
+  @ObjCSelector('setExposureTime:iso:')
+  PlatformExposureStateValue setExposureTime(int? exposureTime, double? iso);
 }
 
 /// Handler for native callbacks that are not tied to a specific camera ID.

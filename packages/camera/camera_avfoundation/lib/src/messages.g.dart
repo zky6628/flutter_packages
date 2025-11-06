@@ -64,18 +64,43 @@ enum PlatformDeviceOrientation {
   landscapeRight,
 }
 
-enum PlatformExposureMode { auto, locked }
+enum PlatformExposureMode {
+  auto,
+  locked,
+  manual,
+}
 
-enum PlatformFlashMode { off, auto, always, torch }
+enum PlatformFlashMode {
+  off,
+  auto,
+  always,
+  torch,
+}
 
-enum PlatformFocusMode { auto, locked }
+enum PlatformFocusMode {
+  auto,
+  locked,
+}
 
 /// Pigeon version of ImageFileFormat.
-enum PlatformImageFileFormat { jpeg, heif }
+enum PlatformImageFileFormat {
+  jpeg,
+  heif,
+}
 
-enum PlatformImageFormatGroup { bgra8888, yuv420 }
+enum PlatformImageFormatGroup {
+  bgra8888,
+  yuv420,
+}
 
-enum PlatformResolutionPreset { low, medium, high, veryHigh, ultraHigh, max }
+enum PlatformResolutionPreset {
+  low,
+  medium,
+  high,
+  veryHigh,
+  ultraHigh,
+  max,
+}
 
 class PlatformCameraDescription {
   PlatformCameraDescription({
@@ -94,7 +119,11 @@ class PlatformCameraDescription {
   PlatformCameraLensType lensType;
 
   Object encode() {
-    return <Object?>[name, lensDirection, lensType];
+    return <Object?>[
+      name,
+      lensDirection,
+      lensType,
+    ];
   }
 
   static PlatformCameraDescription decode(Object result) {
@@ -194,32 +223,143 @@ class PlatformMediaSettings {
   }
 }
 
+class PlatformCameraExposureDescription {
+  PlatformCameraExposureDescription({
+    required this.currentExpoMode,
+    required this.currentExpoOffset,
+    required this.minExpoOffset,
+    required this.maxExpoOffset,
+    required this.currentExpoISO,
+    required this.minExpoISO,
+    required this.maxExpoISO,
+    required this.currentExpoTimeNs,
+    required this.minExpoTimeNs,
+    required this.maxExpoTimeNs,
+  });
+
+  /// Exposure Mode
+  PlatformExposureMode currentExpoMode;
+
+  /// Exposure Offset (EV)
+  double currentExpoOffset;
+
+  double minExpoOffset;
+
+  double maxExpoOffset;
+
+  /// Exposure ISO
+  double currentExpoISO;
+
+  double minExpoISO;
+
+  double maxExpoISO;
+
+  /// Exposure Time(shutter)
+  int currentExpoTimeNs;
+
+  int minExpoTimeNs;
+
+  int maxExpoTimeNs;
+
+  Object encode() {
+    return <Object?>[
+      currentExpoMode,
+      currentExpoOffset,
+      minExpoOffset,
+      maxExpoOffset,
+      currentExpoISO,
+      minExpoISO,
+      maxExpoISO,
+      currentExpoTimeNs,
+      minExpoTimeNs,
+      maxExpoTimeNs,
+    ];
+  }
+
+  static PlatformCameraExposureDescription decode(Object result) {
+    result as List<Object?>;
+    return PlatformCameraExposureDescription(
+      currentExpoMode: result[0]! as PlatformExposureMode,
+      currentExpoOffset: result[1]! as double,
+      minExpoOffset: result[2]! as double,
+      maxExpoOffset: result[3]! as double,
+      currentExpoISO: result[4]! as double,
+      minExpoISO: result[5]! as double,
+      maxExpoISO: result[6]! as double,
+      currentExpoTimeNs: result[7]! as int,
+      minExpoTimeNs: result[8]! as int,
+      maxExpoTimeNs: result[9]! as int,
+    );
+  }
+}
+
+class PlatformExposureStateValue {
+  PlatformExposureStateValue({
+    required this.expoTimeNs,
+    required this.expoISO,
+  });
+
+  int expoTimeNs;
+
+  double expoISO;
+
+  Object encode() {
+    return <Object?>[
+      expoTimeNs,
+      expoISO,
+    ];
+  }
+
+  static PlatformExposureStateValue decode(Object result) {
+    result as List<Object?>;
+    return PlatformExposureStateValue(
+      expoTimeNs: result[0]! as int,
+      expoISO: result[1]! as double,
+    );
+  }
+}
+
 class PlatformPoint {
-  PlatformPoint({required this.x, required this.y});
+  PlatformPoint({
+    required this.x,
+    required this.y,
+  });
 
   double x;
 
   double y;
 
   Object encode() {
-    return <Object?>[x, y];
+    return <Object?>[
+      x,
+      y,
+    ];
   }
 
   static PlatformPoint decode(Object result) {
     result as List<Object?>;
-    return PlatformPoint(x: result[0]! as double, y: result[1]! as double);
+    return PlatformPoint(
+      x: result[0]! as double,
+      y: result[1]! as double,
+    );
   }
 }
 
 class PlatformSize {
-  PlatformSize({required this.width, required this.height});
+  PlatformSize({
+    required this.width,
+    required this.height,
+  });
 
   double width;
 
   double height;
 
   Object encode() {
-    return <Object?>[width, height];
+    return <Object?>[
+      width,
+      height,
+    ];
   }
 
   static PlatformSize decode(Object result) {
@@ -274,11 +414,17 @@ class _PigeonCodec extends StandardMessageCodec {
     } else if (value is PlatformMediaSettings) {
       buffer.putUint8(140);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformPoint) {
+    } else if (value is PlatformCameraExposureDescription) {
       buffer.putUint8(141);
       writeValue(buffer, value.encode());
-    } else if (value is PlatformSize) {
+    } else if (value is PlatformExposureStateValue) {
       buffer.putUint8(142);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformPoint) {
+      buffer.putUint8(143);
+      writeValue(buffer, value.encode());
+    } else if (value is PlatformSize) {
+      buffer.putUint8(144);
       writeValue(buffer, value.encode());
     } else {
       super.writeValue(buffer, value);
@@ -322,8 +468,12 @@ class _PigeonCodec extends StandardMessageCodec {
       case 140:
         return PlatformMediaSettings.decode(readValue(buffer)!);
       case 141:
-        return PlatformPoint.decode(readValue(buffer)!);
+        return PlatformCameraExposureDescription.decode(readValue(buffer)!);
       case 142:
+        return PlatformExposureStateValue.decode(readValue(buffer)!);
+      case 143:
+        return PlatformPoint.decode(readValue(buffer)!);
+      case 144:
         return PlatformSize.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
@@ -335,13 +485,9 @@ class CameraApi {
   /// Constructor for [CameraApi].  The [binaryMessenger] named argument is
   /// available for dependency injection.  If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  CameraApi({
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) : pigeonVar_binaryMessenger = binaryMessenger,
-       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
-           ? '.$messageChannelSuffix'
-           : '';
+  CameraApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
+      : pigeonVar_binaryMessenger = binaryMessenger,
+        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -350,14 +496,12 @@ class CameraApi {
 
   /// Returns the list of available cameras.
   Future<List<PlatformCameraDescription>> getAvailableCameras() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.getAvailableCameras$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getAvailableCameras$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -374,24 +518,20 @@ class CameraApi {
         message: 'Host platform returned null value for non-null return value.',
       );
     } else {
-      return (pigeonVar_replyList[0] as List<Object?>?)!
-          .cast<PlatformCameraDescription>();
+      return (pigeonVar_replyList[0] as List<Object?>?)!.cast<PlatformCameraDescription>();
     }
   }
 
   /// Create a new camera with the given settings, and returns its ID.
   Future<int> create(String cameraName, PlatformMediaSettings settings) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.create$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.create$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[cameraName, settings])
-            as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[cameraName, settings]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {
@@ -411,21 +551,15 @@ class CameraApi {
   }
 
   /// Initializes the camera with the given ID.
-  Future<void> initialize(
-    int cameraId,
-    PlatformImageFormatGroup imageFormat,
-  ) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.initialize$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+  Future<void> initialize(int cameraId, PlatformImageFormatGroup imageFormat) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.initialize$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
-        await pigeonVar_channel.send(<Object?>[cameraId, imageFormat])
-            as List<Object?>?;
+        await pigeonVar_channel.send(<Object?>[cameraId, imageFormat]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
       throw _createConnectionError(pigeonVar_channelName);
     } else if (pigeonVar_replyList.length > 1) {
@@ -441,14 +575,12 @@ class CameraApi {
 
   /// Begins streaming frames from the camera.
   Future<void> startImageStream() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.startImageStream$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.startImageStream$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -466,14 +598,12 @@ class CameraApi {
 
   /// Stops streaming frames from the camera.
   Future<void> stopImageStream() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.stopImageStream$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.stopImageStream$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -494,14 +624,12 @@ class CameraApi {
   ///
   /// This is used to throttle sending frames across the channel.
   Future<void> receivedImageStreamData() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.receivedImageStreamData$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.receivedImageStreamData$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -520,14 +648,12 @@ class CameraApi {
   /// Indicates that the given camera is no longer being used on the Dart side,
   /// and any associated resources can be cleaned up.
   Future<void> dispose(int cameraId) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.dispose$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.dispose$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[cameraId]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -544,17 +670,13 @@ class CameraApi {
   }
 
   /// Locks the camera capture to the current device orientation.
-  Future<void> lockCaptureOrientation(
-    PlatformDeviceOrientation orientation,
-  ) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.lockCaptureOrientation$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+  Future<void> lockCaptureOrientation(PlatformDeviceOrientation orientation) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.lockCaptureOrientation$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[orientation]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -573,14 +695,12 @@ class CameraApi {
   /// Unlocks camera capture orientation, allowing it to automatically adapt to
   /// device orientation.
   Future<void> unlockCaptureOrientation() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.unlockCaptureOrientation$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.unlockCaptureOrientation$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -599,14 +719,12 @@ class CameraApi {
   /// Takes a picture with the current settings, and returns the path to the
   /// resulting file.
   Future<String> takePicture() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.takePicture$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.takePicture$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -629,14 +747,12 @@ class CameraApi {
 
   /// Does any preprocessing necessary before beginning to record video.
   Future<void> prepareForVideoRecording() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.prepareForVideoRecording$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.prepareForVideoRecording$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -655,14 +771,12 @@ class CameraApi {
   /// Begins recording video, optionally enabling streaming to Dart at the same
   /// time.
   Future<void> startVideoRecording(bool enableStream) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.startVideoRecording$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.startVideoRecording$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[enableStream]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -680,14 +794,12 @@ class CameraApi {
 
   /// Stops recording video, and results the path to the resulting file.
   Future<String> stopVideoRecording() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.stopVideoRecording$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.stopVideoRecording$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -710,14 +822,12 @@ class CameraApi {
 
   /// Pauses video recording.
   Future<void> pauseVideoRecording() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.pauseVideoRecording$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.pauseVideoRecording$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -735,14 +845,12 @@ class CameraApi {
 
   /// Resumes a previously paused video recording.
   Future<void> resumeVideoRecording() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.resumeVideoRecording$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.resumeVideoRecording$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -760,14 +868,12 @@ class CameraApi {
 
   /// Switches the camera to the given flash mode.
   Future<void> setFlashMode(PlatformFlashMode mode) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setFlashMode$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setFlashMode$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[mode]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -785,14 +891,12 @@ class CameraApi {
 
   /// Switches the camera to the given exposure mode.
   Future<void> setExposureMode(PlatformExposureMode mode) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposureMode$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposureMode$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[mode]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -812,14 +916,12 @@ class CameraApi {
   ///
   /// A null value resets to the default exposure point.
   Future<void> setExposurePoint(PlatformPoint? point) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposurePoint$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposurePoint$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[point]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -837,14 +939,12 @@ class CameraApi {
 
   /// Returns the minimum exposure offset supported by the camera.
   Future<double> getMinExposureOffset() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMinExposureOffset$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMinExposureOffset$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -867,14 +967,12 @@ class CameraApi {
 
   /// Returns the maximum exposure offset supported by the camera.
   Future<double> getMaxExposureOffset() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMaxExposureOffset$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMaxExposureOffset$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -897,14 +995,12 @@ class CameraApi {
 
   /// Sets the exposure offset manually to the given value.
   Future<void> setExposureOffset(double offset) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposureOffset$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposureOffset$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[offset]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -922,14 +1018,12 @@ class CameraApi {
 
   /// Switches the camera to the given focus mode.
   Future<void> setFocusMode(PlatformFocusMode mode) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setFocusMode$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setFocusMode$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[mode]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -949,14 +1043,12 @@ class CameraApi {
   ///
   /// A null value resets to the default focus point.
   Future<void> setFocusPoint(PlatformPoint? point) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setFocusPoint$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setFocusPoint$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[point]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -974,14 +1066,12 @@ class CameraApi {
 
   /// Returns the minimum zoom level supported by the camera.
   Future<double> getMinZoomLevel() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMinZoomLevel$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMinZoomLevel$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1004,14 +1094,12 @@ class CameraApi {
 
   /// Returns the maximum zoom level supported by the camera.
   Future<double> getMaxZoomLevel() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMaxZoomLevel$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMaxZoomLevel$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1034,14 +1122,12 @@ class CameraApi {
 
   /// Sets the zoom factor.
   Future<void> setZoomLevel(double zoom) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setZoomLevel$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setZoomLevel$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[zoom]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1059,14 +1145,12 @@ class CameraApi {
 
   /// Pauses streaming of preview frames.
   Future<void> pausePreview() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.pausePreview$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.pausePreview$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1084,14 +1168,12 @@ class CameraApi {
 
   /// Resumes a previously paused preview stream.
   Future<void> resumePreview() async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.resumePreview$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.resumePreview$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(null) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1111,14 +1193,12 @@ class CameraApi {
   ///
   /// This should only be called while video recording is active.
   Future<void> updateDescriptionWhileRecording(String cameraName) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.updateDescriptionWhileRecording$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.updateDescriptionWhileRecording$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[cameraName]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1136,14 +1216,12 @@ class CameraApi {
 
   /// Sets the file format used for taking pictures.
   Future<void> setImageFileFormat(PlatformImageFileFormat format) async {
-    final String pigeonVar_channelName =
-        'dev.flutter.pigeon.camera_avfoundation.CameraApi.setImageFileFormat$pigeonVar_messageChannelSuffix';
-    final BasicMessageChannel<Object?> pigeonVar_channel =
-        BasicMessageChannel<Object?>(
-          pigeonVar_channelName,
-          pigeonChannelCodec,
-          binaryMessenger: pigeonVar_binaryMessenger,
-        );
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setImageFileFormat$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
     final List<Object?>? pigeonVar_replyList =
         await pigeonVar_channel.send(<Object?>[format]) as List<Object?>?;
     if (pigeonVar_replyList == null) {
@@ -1158,6 +1236,244 @@ class CameraApi {
       return;
     }
   }
+
+  /// Returns the camera exposure config current description.
+  Future<PlatformCameraExposureDescription> getExposureDescription() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getExposureDescription$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as PlatformCameraExposureDescription?)!;
+    }
+  }
+
+  /// Returns the minimum supported exposure time (duration) in nanoseconds.
+  /// Returns -1 if manual exposure control is not supported.
+  Future<int> getMinExposureTime() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMinExposureTime$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as int?)!;
+    }
+  }
+
+  /// Returns the maximum supported exposure time (duration) in nanoseconds.
+  /// Returns -1 if manual exposure control is not supported.
+  Future<int> getMaxExposureTime() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMaxExposureTime$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as int?)!;
+    }
+  }
+
+  /// Returns the current exposure time in nanoseconds.
+  Future<int> getCurrentExposureTime() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getCurrentExposureTime$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as int?)!;
+    }
+  }
+
+  /// Returns the minimum supported ISO value.
+  /// Returns -1 if manual ISO control is not supported.
+  Future<double> getMinISO() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMinISO$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as double?)!;
+    }
+  }
+
+  /// Returns the maximum supported ISO value.
+  /// Returns -1 if manual ISO control is not supported.
+  Future<double> getMaxISO() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getMaxISO$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as double?)!;
+    }
+  }
+
+  /// Returns the current ISO value.
+  Future<double> getCurrentISO() async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.getCurrentISO$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(null) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as double?)!;
+    }
+  }
+
+  /// Sets the exposure time (shutter speed) manually.
+  ///
+  /// [exposureTime] is the exposure duration in nanoseconds.
+  /// The camera must be in manual exposure mode (ExposureMode.manual).
+  ///
+  /// The value should be between getMinExposureTime() and getMaxExposureTime().
+  ///
+  /// On iOS, this also requires setting an ISO value. If not provided,
+  /// the current ISO will be maintained.
+  ///
+  /// Returns the actual exposure time and iso that was set.
+  Future<PlatformExposureStateValue> setExposureTime(int? exposureTime, double? iso) async {
+    final String pigeonVar_channelName = 'dev.flutter.pigeon.camera_avfoundation.CameraApi.setExposureTime$pigeonVar_messageChannelSuffix';
+    final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+      pigeonVar_channelName,
+      pigeonChannelCodec,
+      binaryMessenger: pigeonVar_binaryMessenger,
+    );
+    final List<Object?>? pigeonVar_replyList =
+        await pigeonVar_channel.send(<Object?>[exposureTime, iso]) as List<Object?>?;
+    if (pigeonVar_replyList == null) {
+      throw _createConnectionError(pigeonVar_channelName);
+    } else if (pigeonVar_replyList.length > 1) {
+      throw PlatformException(
+        code: pigeonVar_replyList[0]! as String,
+        message: pigeonVar_replyList[1] as String?,
+        details: pigeonVar_replyList[2],
+      );
+    } else if (pigeonVar_replyList[0] == null) {
+      throw PlatformException(
+        code: 'null-error',
+        message: 'Host platform returned null value for non-null return value.',
+      );
+    } else {
+      return (pigeonVar_replyList[0] as PlatformExposureStateValue?)!;
+    }
+  }
 }
 
 /// Handler for native callbacks that are not tied to a specific camera ID.
@@ -1167,45 +1483,29 @@ abstract class CameraGlobalEventApi {
   /// Called when the device's physical orientation changes.
   void deviceOrientationChanged(PlatformDeviceOrientation orientation);
 
-  static void setUp(
-    CameraGlobalEventApi? api, {
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty
-        ? '.$messageChannelSuffix'
-        : '';
+  static void setUp(CameraGlobalEventApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
-      final BasicMessageChannel<Object?>
-      pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.camera_avfoundation.CameraGlobalEventApi.deviceOrientationChanged$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.camera_avfoundation.CameraGlobalEventApi.deviceOrientationChanged$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
-          assert(
-            message != null,
-            'Argument for dev.flutter.pigeon.camera_avfoundation.CameraGlobalEventApi.deviceOrientationChanged was null.',
-          );
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.camera_avfoundation.CameraGlobalEventApi.deviceOrientationChanged was null.');
           final List<Object?> args = (message as List<Object?>?)!;
-          final PlatformDeviceOrientation? arg_orientation =
-              (args[0] as PlatformDeviceOrientation?);
-          assert(
-            arg_orientation != null,
-            'Argument for dev.flutter.pigeon.camera_avfoundation.CameraGlobalEventApi.deviceOrientationChanged was null, expected non-null PlatformDeviceOrientation.',
-          );
+          final PlatformDeviceOrientation? arg_orientation = (args[0] as PlatformDeviceOrientation?);
+          assert(arg_orientation != null,
+              'Argument for dev.flutter.pigeon.camera_avfoundation.CameraGlobalEventApi.deviceOrientationChanged was null, expected non-null PlatformDeviceOrientation.');
           try {
             api.deviceOrientationChanged(arg_orientation!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
@@ -1228,79 +1528,54 @@ abstract class CameraEventApi {
   /// handling a specific HostApi call, such as during streaming.
   void error(String message);
 
-  static void setUp(
-    CameraEventApi? api, {
-    BinaryMessenger? binaryMessenger,
-    String messageChannelSuffix = '',
-  }) {
-    messageChannelSuffix = messageChannelSuffix.isNotEmpty
-        ? '.$messageChannelSuffix'
-        : '';
+  static void setUp(CameraEventApi? api, {BinaryMessenger? binaryMessenger, String messageChannelSuffix = '',}) {
+    messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
     {
-      final BasicMessageChannel<Object?>
-      pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.camera_avfoundation.CameraEventApi.initialized$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.camera_avfoundation.CameraEventApi.initialized$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
-          assert(
-            message != null,
-            'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.initialized was null.',
-          );
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.initialized was null.');
           final List<Object?> args = (message as List<Object?>?)!;
-          final PlatformCameraState? arg_initialState =
-              (args[0] as PlatformCameraState?);
-          assert(
-            arg_initialState != null,
-            'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.initialized was null, expected non-null PlatformCameraState.',
-          );
+          final PlatformCameraState? arg_initialState = (args[0] as PlatformCameraState?);
+          assert(arg_initialState != null,
+              'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.initialized was null, expected non-null PlatformCameraState.');
           try {
             api.initialized(arg_initialState!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }
     }
     {
-      final BasicMessageChannel<Object?>
-      pigeonVar_channel = BasicMessageChannel<Object?>(
-        'dev.flutter.pigeon.camera_avfoundation.CameraEventApi.error$messageChannelSuffix',
-        pigeonChannelCodec,
-        binaryMessenger: binaryMessenger,
-      );
+      final BasicMessageChannel<Object?> pigeonVar_channel = BasicMessageChannel<Object?>(
+          'dev.flutter.pigeon.camera_avfoundation.CameraEventApi.error$messageChannelSuffix', pigeonChannelCodec,
+          binaryMessenger: binaryMessenger);
       if (api == null) {
         pigeonVar_channel.setMessageHandler(null);
       } else {
         pigeonVar_channel.setMessageHandler((Object? message) async {
-          assert(
-            message != null,
-            'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.error was null.',
-          );
+          assert(message != null,
+          'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.error was null.');
           final List<Object?> args = (message as List<Object?>?)!;
           final String? arg_message = (args[0] as String?);
-          assert(
-            arg_message != null,
-            'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.error was null, expected non-null String.',
-          );
+          assert(arg_message != null,
+              'Argument for dev.flutter.pigeon.camera_avfoundation.CameraEventApi.error was null, expected non-null String.');
           try {
             api.error(arg_message!);
             return wrapResponse(empty: true);
           } on PlatformException catch (e) {
             return wrapResponse(error: e);
-          } catch (e) {
-            return wrapResponse(
-              error: PlatformException(code: 'error', message: e.toString()),
-            );
+          }          catch (e) {
+            return wrapResponse(error: PlatformException(code: 'error', message: e.toString()));
           }
         });
       }

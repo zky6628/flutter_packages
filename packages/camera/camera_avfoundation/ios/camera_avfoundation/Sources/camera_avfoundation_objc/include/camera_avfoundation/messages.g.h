@@ -61,6 +61,7 @@ typedef NS_ENUM(NSUInteger, FCPPlatformDeviceOrientation) {
 typedef NS_ENUM(NSUInteger, FCPPlatformExposureMode) {
   FCPPlatformExposureModeAuto = 0,
   FCPPlatformExposureModeLocked = 1,
+  FCPPlatformExposureModeManual = 2,
 };
 
 /// Wrapper for FCPPlatformExposureMode to allow for nullability.
@@ -134,6 +135,8 @@ typedef NS_ENUM(NSUInteger, FCPPlatformResolutionPreset) {
 @class FCPPlatformCameraDescription;
 @class FCPPlatformCameraState;
 @class FCPPlatformMediaSettings;
+@class FCPPlatformCameraExposureDescription;
+@class FCPPlatformExposureStateValue;
 @class FCPPlatformPoint;
 @class FCPPlatformSize;
 
@@ -141,10 +144,10 @@ typedef NS_ENUM(NSUInteger, FCPPlatformResolutionPreset) {
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)makeWithName:(NSString *)name
-               lensDirection:(FCPPlatformCameraLensDirection)lensDirection
-                    lensType:(FCPPlatformCameraLensType)lensType;
+    lensDirection:(FCPPlatformCameraLensDirection)lensDirection
+    lensType:(FCPPlatformCameraLensType)lensType;
 /// The name of the camera device.
-@property(nonatomic, copy) NSString *name;
+@property(nonatomic, copy) NSString * name;
 /// The direction the camera is facing.
 @property(nonatomic, assign) FCPPlatformCameraLensDirection lensDirection;
 /// The type of the camera lens.
@@ -155,51 +158,91 @@ typedef NS_ENUM(NSUInteger, FCPPlatformResolutionPreset) {
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)makeWithPreviewSize:(FCPPlatformSize *)previewSize
-                       exposureMode:(FCPPlatformExposureMode)exposureMode
-                          focusMode:(FCPPlatformFocusMode)focusMode
-             exposurePointSupported:(BOOL)exposurePointSupported
-                focusPointSupported:(BOOL)focusPointSupported;
+    exposureMode:(FCPPlatformExposureMode)exposureMode
+    focusMode:(FCPPlatformFocusMode)focusMode
+    exposurePointSupported:(BOOL )exposurePointSupported
+    focusPointSupported:(BOOL )focusPointSupported;
 /// The size of the preview, in pixels.
-@property(nonatomic, strong) FCPPlatformSize *previewSize;
+@property(nonatomic, strong) FCPPlatformSize * previewSize;
 /// The default exposure mode
 @property(nonatomic, assign) FCPPlatformExposureMode exposureMode;
 /// The default focus mode
 @property(nonatomic, assign) FCPPlatformFocusMode focusMode;
 /// Whether setting exposure points is supported.
-@property(nonatomic, assign) BOOL exposurePointSupported;
+@property(nonatomic, assign) BOOL  exposurePointSupported;
 /// Whether setting focus points is supported.
-@property(nonatomic, assign) BOOL focusPointSupported;
+@property(nonatomic, assign) BOOL  focusPointSupported;
 @end
 
 @interface FCPPlatformMediaSettings : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
 + (instancetype)makeWithResolutionPreset:(FCPPlatformResolutionPreset)resolutionPreset
-                         framesPerSecond:(nullable NSNumber *)framesPerSecond
-                            videoBitrate:(nullable NSNumber *)videoBitrate
-                            audioBitrate:(nullable NSNumber *)audioBitrate
-                             enableAudio:(BOOL)enableAudio;
+    framesPerSecond:(nullable NSNumber *)framesPerSecond
+    videoBitrate:(nullable NSNumber *)videoBitrate
+    audioBitrate:(nullable NSNumber *)audioBitrate
+    enableAudio:(BOOL )enableAudio;
 @property(nonatomic, assign) FCPPlatformResolutionPreset resolutionPreset;
-@property(nonatomic, strong, nullable) NSNumber *framesPerSecond;
-@property(nonatomic, strong, nullable) NSNumber *videoBitrate;
-@property(nonatomic, strong, nullable) NSNumber *audioBitrate;
-@property(nonatomic, assign) BOOL enableAudio;
+@property(nonatomic, strong, nullable) NSNumber * framesPerSecond;
+@property(nonatomic, strong, nullable) NSNumber * videoBitrate;
+@property(nonatomic, strong, nullable) NSNumber * audioBitrate;
+@property(nonatomic, assign) BOOL  enableAudio;
+@end
+
+@interface FCPPlatformCameraExposureDescription : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithCurrentExpoMode:(FCPPlatformExposureMode)currentExpoMode
+    currentExpoOffset:(double )currentExpoOffset
+    minExpoOffset:(double )minExpoOffset
+    maxExpoOffset:(double )maxExpoOffset
+    currentExpoISO:(double )currentExpoISO
+    minExpoISO:(double )minExpoISO
+    maxExpoISO:(double )maxExpoISO
+    currentExpoTimeNs:(NSInteger )currentExpoTimeNs
+    minExpoTimeNs:(NSInteger )minExpoTimeNs
+    maxExpoTimeNs:(NSInteger )maxExpoTimeNs;
+/// Exposure Mode
+@property(nonatomic, assign) FCPPlatformExposureMode currentExpoMode;
+/// Exposure Offset (EV)
+@property(nonatomic, assign) double  currentExpoOffset;
+@property(nonatomic, assign) double  minExpoOffset;
+@property(nonatomic, assign) double  maxExpoOffset;
+/// Exposure ISO
+@property(nonatomic, assign) double  currentExpoISO;
+@property(nonatomic, assign) double  minExpoISO;
+@property(nonatomic, assign) double  maxExpoISO;
+/// Exposure Time(shutter)
+@property(nonatomic, assign) NSInteger  currentExpoTimeNs;
+@property(nonatomic, assign) NSInteger  minExpoTimeNs;
+@property(nonatomic, assign) NSInteger  maxExpoTimeNs;
+@end
+
+@interface FCPPlatformExposureStateValue : NSObject
+/// `init` unavailable to enforce nonnull fields, see the `make` class method.
+- (instancetype)init NS_UNAVAILABLE;
++ (instancetype)makeWithExpoTimeNs:(NSInteger )expoTimeNs
+    expoISO:(double )expoISO;
+@property(nonatomic, assign) NSInteger  expoTimeNs;
+@property(nonatomic, assign) double  expoISO;
 @end
 
 @interface FCPPlatformPoint : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
-+ (instancetype)makeWithX:(double)x y:(double)y;
-@property(nonatomic, assign) double x;
-@property(nonatomic, assign) double y;
++ (instancetype)makeWithX:(double )x
+    y:(double )y;
+@property(nonatomic, assign) double  x;
+@property(nonatomic, assign) double  y;
 @end
 
 @interface FCPPlatformSize : NSObject
 /// `init` unavailable to enforce nonnull fields, see the `make` class method.
 - (instancetype)init NS_UNAVAILABLE;
-+ (instancetype)makeWithWidth:(double)width height:(double)height;
-@property(nonatomic, assign) double width;
-@property(nonatomic, assign) double height;
++ (instancetype)makeWithWidth:(double )width
+    height:(double )height;
+@property(nonatomic, assign) double  width;
+@property(nonatomic, assign) double  height;
 @end
 
 /// The codec used by all APIs.
@@ -207,16 +250,11 @@ NSObject<FlutterMessageCodec> *FCPGetMessagesCodec(void);
 
 @protocol FCPCameraApi
 /// Returns the list of available cameras.
-- (void)availableCamerasWithCompletion:(void (^)(NSArray<FCPPlatformCameraDescription *> *_Nullable,
-                                                 FlutterError *_Nullable))completion;
+- (void)availableCamerasWithCompletion:(void (^)(NSArray<FCPPlatformCameraDescription *> *_Nullable, FlutterError *_Nullable))completion;
 /// Create a new camera with the given settings, and returns its ID.
-- (void)createCameraWithName:(NSString *)cameraName
-                    settings:(FCPPlatformMediaSettings *)settings
-                  completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+- (void)createCameraWithName:(NSString *)cameraName settings:(FCPPlatformMediaSettings *)settings completion:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 /// Initializes the camera with the given ID.
-- (void)initializeCamera:(NSInteger)cameraId
-         withImageFormat:(FCPPlatformImageFormatGroup)imageFormat
-              completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)initializeCamera:(NSInteger)cameraId withImageFormat:(FCPPlatformImageFormatGroup)imageFormat completion:(void (^)(FlutterError *_Nullable))completion;
 /// Begins streaming frames from the camera.
 - (void)startImageStreamWithCompletion:(void (^)(FlutterError *_Nullable))completion;
 /// Stops streaming frames from the camera.
@@ -230,39 +268,32 @@ NSObject<FlutterMessageCodec> *FCPGetMessagesCodec(void);
 /// and any associated resources can be cleaned up.
 - (void)disposeCamera:(NSInteger)cameraId completion:(void (^)(FlutterError *_Nullable))completion;
 /// Locks the camera capture to the current device orientation.
-- (void)lockCaptureOrientation:(FCPPlatformDeviceOrientation)orientation
-                    completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)lockCaptureOrientation:(FCPPlatformDeviceOrientation)orientation completion:(void (^)(FlutterError *_Nullable))completion;
 /// Unlocks camera capture orientation, allowing it to automatically adapt to
 /// device orientation.
 - (void)unlockCaptureOrientationWithCompletion:(void (^)(FlutterError *_Nullable))completion;
 /// Takes a picture with the current settings, and returns the path to the
 /// resulting file.
-- (void)takePictureWithCompletion:(void (^)(NSString *_Nullable,
-                                            FlutterError *_Nullable))completion;
+- (void)takePictureWithCompletion:(void (^)(NSString *_Nullable, FlutterError *_Nullable))completion;
 /// Does any preprocessing necessary before beginning to record video.
 - (void)prepareForVideoRecordingWithCompletion:(void (^)(FlutterError *_Nullable))completion;
 /// Begins recording video, optionally enabling streaming to Dart at the same
 /// time.
-- (void)startVideoRecordingWithStreaming:(BOOL)enableStream
-                              completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)startVideoRecordingWithStreaming:(BOOL)enableStream completion:(void (^)(FlutterError *_Nullable))completion;
 /// Stops recording video, and results the path to the resulting file.
-- (void)stopVideoRecordingWithCompletion:(void (^)(NSString *_Nullable,
-                                                   FlutterError *_Nullable))completion;
+- (void)stopVideoRecordingWithCompletion:(void (^)(NSString *_Nullable, FlutterError *_Nullable))completion;
 /// Pauses video recording.
 - (void)pauseVideoRecordingWithCompletion:(void (^)(FlutterError *_Nullable))completion;
 /// Resumes a previously paused video recording.
 - (void)resumeVideoRecordingWithCompletion:(void (^)(FlutterError *_Nullable))completion;
 /// Switches the camera to the given flash mode.
-- (void)setFlashMode:(FCPPlatformFlashMode)mode
-          completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)setFlashMode:(FCPPlatformFlashMode)mode completion:(void (^)(FlutterError *_Nullable))completion;
 /// Switches the camera to the given exposure mode.
-- (void)setExposureMode:(FCPPlatformExposureMode)mode
-             completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)setExposureMode:(FCPPlatformExposureMode)mode completion:(void (^)(FlutterError *_Nullable))completion;
 /// Anchors auto-exposure to the given point in (0,1) coordinate space.
 ///
 /// A null value resets to the default exposure point.
-- (void)setExposurePoint:(nullable FCPPlatformPoint *)point
-              completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)setExposurePoint:(nullable FCPPlatformPoint *)point completion:(void (^)(FlutterError *_Nullable))completion;
 /// Returns the minimum exposure offset supported by the camera.
 - (void)getMinimumExposureOffset:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 /// Returns the maximum exposure offset supported by the camera.
@@ -270,13 +301,11 @@ NSObject<FlutterMessageCodec> *FCPGetMessagesCodec(void);
 /// Sets the exposure offset manually to the given value.
 - (void)setExposureOffset:(double)offset completion:(void (^)(FlutterError *_Nullable))completion;
 /// Switches the camera to the given focus mode.
-- (void)setFocusMode:(FCPPlatformFocusMode)mode
-          completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)setFocusMode:(FCPPlatformFocusMode)mode completion:(void (^)(FlutterError *_Nullable))completion;
 /// Anchors auto-focus to the given point in (0,1) coordinate space.
 ///
 /// A null value resets to the default focus point.
-- (void)setFocusPoint:(nullable FCPPlatformPoint *)point
-           completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)setFocusPoint:(nullable FCPPlatformPoint *)point completion:(void (^)(FlutterError *_Nullable))completion;
 /// Returns the minimum zoom level supported by the camera.
 - (void)getMinimumZoomLevel:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
 /// Returns the maximum zoom level supported by the camera.
@@ -290,40 +319,63 @@ NSObject<FlutterMessageCodec> *FCPGetMessagesCodec(void);
 /// Changes the camera used while recording video.
 ///
 /// This should only be called while video recording is active.
-- (void)updateDescriptionWhileRecordingCameraName:(NSString *)cameraName
-                                       completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)updateDescriptionWhileRecordingCameraName:(NSString *)cameraName completion:(void (^)(FlutterError *_Nullable))completion;
 /// Sets the file format used for taking pictures.
-- (void)setImageFileFormat:(FCPPlatformImageFileFormat)format
-                completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)setImageFileFormat:(FCPPlatformImageFileFormat)format completion:(void (^)(FlutterError *_Nullable))completion;
+/// Returns the camera exposure config current description.
+- (void)getExposureDescription:(void (^)(FCPPlatformCameraExposureDescription *_Nullable, FlutterError *_Nullable))completion;
+/// Returns the minimum supported exposure time (duration) in nanoseconds.
+/// Returns -1 if manual exposure control is not supported.
+- (void)getMinimumExposureTime:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+/// Returns the maximum supported exposure time (duration) in nanoseconds.
+/// Returns -1 if manual exposure control is not supported.
+- (void)getMaximumExposureTime:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+/// Returns the current exposure time in nanoseconds.
+- (void)getCurrentExposureTime:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+/// Returns the minimum supported ISO value.
+/// Returns -1 if manual ISO control is not supported.
+- (void)getMinimumISO:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+/// Returns the maximum supported ISO value.
+/// Returns -1 if manual ISO control is not supported.
+- (void)getMaximumISO:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+/// Returns the current ISO value.
+- (void)getCurrentISO:(void (^)(NSNumber *_Nullable, FlutterError *_Nullable))completion;
+/// Sets the exposure time (shutter speed) manually.
+///
+/// [exposureTime] is the exposure duration in nanoseconds.
+/// The camera must be in manual exposure mode (ExposureMode.manual).
+///
+/// The value should be between getMinExposureTime() and getMaxExposureTime().
+///
+/// On iOS, this also requires setting an ISO value. If not provided,
+/// the current ISO will be maintained.
+///
+/// Returns the actual exposure time and iso that was set.
+- (void)setExposureTime:(nullable NSNumber *)exposureTime iso:(nullable NSNumber *)iso completion:(void (^)(FCPPlatformExposureStateValue *_Nullable, FlutterError *_Nullable))completion;
 @end
 
-extern void SetUpFCPCameraApi(id<FlutterBinaryMessenger> binaryMessenger,
-                              NSObject<FCPCameraApi> *_Nullable api);
+extern void SetUpFCPCameraApi(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FCPCameraApi> *_Nullable api);
 
-extern void SetUpFCPCameraApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger,
-                                        NSObject<FCPCameraApi> *_Nullable api,
-                                        NSString *messageChannelSuffix);
+extern void SetUpFCPCameraApiWithSuffix(id<FlutterBinaryMessenger> binaryMessenger, NSObject<FCPCameraApi> *_Nullable api, NSString *messageChannelSuffix);
+
 
 /// Handler for native callbacks that are not tied to a specific camera ID.
 @interface FCPCameraGlobalEventApi : NSObject
 - (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger;
-- (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger
-                   messageChannelSuffix:(nullable NSString *)messageChannelSuffix;
+- (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger messageChannelSuffix:(nullable NSString *)messageChannelSuffix;
 /// Called when the device's physical orientation changes.
-- (void)deviceOrientationChangedOrientation:(FCPPlatformDeviceOrientation)orientation
-                                 completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)deviceOrientationChangedOrientation:(FCPPlatformDeviceOrientation)orientation completion:(void (^)(FlutterError *_Nullable))completion;
 @end
+
 
 /// Handler for native callbacks that are tied to a specific camera ID.
 ///
 /// This is intended to be initialized with the camera ID as a suffix.
 @interface FCPCameraEventApi : NSObject
 - (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger;
-- (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger
-                   messageChannelSuffix:(nullable NSString *)messageChannelSuffix;
+- (instancetype)initWithBinaryMessenger:(id<FlutterBinaryMessenger>)binaryMessenger messageChannelSuffix:(nullable NSString *)messageChannelSuffix;
 /// Called when the camera is inialitized for use.
-- (void)initializedWithState:(FCPPlatformCameraState *)initialState
-                  completion:(void (^)(FlutterError *_Nullable))completion;
+- (void)initializedWithState:(FCPPlatformCameraState *)initialState completion:(void (^)(FlutterError *_Nullable))completion;
 /// Called when an error occurs in the camera.
 ///
 /// This should be used for errors that occur outside of the context of

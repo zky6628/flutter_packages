@@ -403,6 +403,78 @@ class AVFoundationCamera extends CameraPlatform {
   }
 
   @override
+  Future<double> getCurrentISO(int cameraId) {
+    return _hostApi.getCurrentISO();
+  }
+
+  @override
+  Future<int> getMinExposureTime(int cameraId) {
+    return _hostApi.getMinExposureTime();
+  }
+
+  @override
+  Future<int> getMaxExposureTime(int cameraId) {
+    return _hostApi.getMaxExposureTime();
+  }
+
+  @override
+  Future<double> getMinISO(int cameraId) {
+    return _hostApi.getMinISO();
+  }
+
+  @override
+  Future<double> getMaxISO(int cameraId) {
+    return _hostApi.getMaxISO();
+  }
+
+  @override
+  Future<int> getCurrentExposureTime(int cameraId) {
+    return _hostApi.getCurrentExposureTime();
+  }
+
+  @override
+  Future<ExposureDescription> getExposureDescription(int cameraId) async {
+    PlatformCameraExposureDescription? tempDesc;
+    try {
+      tempDesc = await _hostApi.getExposureDescription();
+    }catch(e) {
+      debugPrint('~~~~~~~getExposureDescription error:$e');
+    }
+
+    final ExposureDescription temp = ExposureDescription(
+      currentExpoOffset: tempDesc?.currentExpoOffset ?? 0.0,
+      currentExpoTimeNs: tempDesc?.currentExpoTimeNs ?? 0,
+      currentExpoISO: tempDesc?.currentExpoISO ?? 0.0,
+      currentExpoMode: exposureModeFromPlatform(tempDesc?.currentExpoMode ?? PlatformExposureMode.auto),
+      maxExpoTimeNs: tempDesc?.maxExpoTimeNs ?? 0,
+      minExpoTimeNs: tempDesc?.minExpoTimeNs ?? 0,
+      minExpoISO: tempDesc?.minExpoISO ?? 0.0,
+      maxExpoISO: tempDesc?.maxExpoISO ?? 0.0,
+      minExpoOffset: tempDesc?.minExpoOffset ?? 0.0,
+      maxExpoOffset: tempDesc?.maxExpoOffset ?? 0.0,
+    );
+    return temp;
+  }
+
+  @override
+  Future<ExposureStateValue> setExposureTime(
+    int cameraId, {
+    int? exposureTime,
+    double? iso,
+  }) async {
+    try {
+      final PlatformExposureStateValue exposure = await _hostApi
+          .setExposureTime(exposureTime, iso);
+      return ExposureStateValue(
+        expoTimeNs: exposure.expoTimeNs,
+        expoISO: exposure.expoISO,
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  @override
   Widget buildPreview(int cameraId) {
     return Texture(textureId: cameraId);
   }
@@ -431,6 +503,8 @@ class AVFoundationCamera extends CameraPlatform {
         return PlatformExposureMode.locked;
       case ExposureMode.auto:
         return PlatformExposureMode.auto;
+      case ExposureMode.manual:
+        return PlatformExposureMode.manual;
     }
     // The enum comes from a different package, which could get a new value at
     // any time, so provide a fallback that ensures this won't break when used

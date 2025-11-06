@@ -81,6 +81,7 @@ ExposureMode exposureModeFromPlatform(PlatformExposureMode mode) {
   return switch (mode) {
     PlatformExposureMode.auto => ExposureMode.auto,
     PlatformExposureMode.locked => ExposureMode.locked,
+    PlatformExposureMode.manual => ExposureMode.manual,
   };
 }
 

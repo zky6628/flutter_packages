@@ -549,4 +549,90 @@ extension CameraPlugin: FCPCameraApi {
       completion(nil)
     }
   }
+  
+  
+  public func getMinimumExposureTime(_ completion: @escaping (NSNumber?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let miniExposureTime = self?.camera?.minimumExposureTime {
+        completion(NSNumber(value: miniExposureTime), nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+  
+  public func getMaximumExposureTime(_ completion: @escaping (NSNumber?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let maxExposureTime = self?.camera?.maximumExposureTime {
+        completion(NSNumber(value: maxExposureTime), nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+  
+  public func getCurrentExposureTime(_ completion: @escaping (NSNumber?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let currentExposureTime = self?.camera?.currentExposureTime {
+        completion(NSNumber(value: currentExposureTime), nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+  
+  public func getMinimumISO(_ completion: @escaping (NSNumber?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let minimumISO = self?.camera?.minimumISO {
+        completion(NSNumber(value: minimumISO), nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+  
+  public func getMaximumISO(_ completion: @escaping (NSNumber?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let maximumISO = self?.camera?.maximumISO {
+        completion(NSNumber(value: maximumISO), nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+  
+  public func getCurrentISO(_ completion: @escaping (NSNumber?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let currentISO = self?.camera?.currentISO {
+        completion(NSNumber(value: currentISO), nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+
+  public func getExposureDescription(_ completion: @escaping (FCPPlatformCameraExposureDescription?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let tempDescription = self?.camera?.getExposureDescription {
+        completion(tempDescription, nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+
+  
+  public func setExposureTime(_ exposureTime: NSNumber?, iso: NSNumber?, completion: @escaping (FCPPlatformExposureStateValue?, FlutterError?) -> Void) {
+    captureSessionQueue.async { [weak self] in
+      if let (tempTime, tempIso) = self?.camera?.setExposureTime(exposureTime as? Int64, iso: iso as? Float, completion: completion) {
+        let exposureState = FCPPlatformExposureStateValue.make(
+          withExpoTimeNs: NSInteger(tempTime), expoISO: Double(tempIso) as Double
+        )
+        completion(exposureState, nil)
+      } else {
+        completion(nil, nil)
+      }
+    }
+  }
+  
 }

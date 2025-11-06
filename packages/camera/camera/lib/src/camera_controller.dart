@@ -894,6 +894,208 @@ class CameraController extends ValueNotifier<CameraValue> {
     }
   }
 
+  /// Gets the minimum supported exposure time for the selected camera in nanoseconds.
+  ///
+  /// Returns -1 if manual exposure time control is not supported.
+  ///
+  /// Common values:
+  /// - 1/8000s = 125,000 ns (very fast, for bright daylight)
+  /// - 1/1000s = 1,000,000 ns (fast, for action)
+  /// - 1/60s = 16,666,667 ns (normal)
+  /// - 1/30s = 33,333,333 ns (low light)
+  Future<int> getMinExposureTime() {
+    _throwIfNotInitialized('getMinExposureTime');
+    try {
+      return CameraPlatform.instance.getMinExposureTime(_cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Gets the maximum supported exposure time for the selected camera in nanoseconds.
+  ///
+  /// Returns -1 if manual exposure time control is not supported.
+  Future<int> getMaxExposureTime() {
+    _throwIfNotInitialized('getMaxExposureTime');
+    try {
+      return CameraPlatform.instance.getMaxExposureTime(_cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Gets the current exposure time of the camera in nanoseconds.
+  Future<int> getCurrentExposureTime() {
+    _throwIfNotInitialized('getCurrentExposureTime');
+    try {
+      return CameraPlatform.instance.getCurrentExposureTime(_cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Gets the minimum supported ISO value for the selected camera.
+  ///
+  /// Returns -1 if manual ISO control is not supported.
+  Future<double> getMinISO() {
+    _throwIfNotInitialized('getMinISO');
+    try {
+      return CameraPlatform.instance.getMinISO(_cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Gets the maximum supported ISO value for the selected camera.
+  ///
+  /// Returns -1 if manual ISO control is not supported.
+  Future<double> getMaxISO() {
+    _throwIfNotInitialized('getMaxISO');
+    try {
+      return CameraPlatform.instance.getMaxISO(_cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Gets the current ISO value of the camera.
+  Future<double> getCurrentISO() {
+    _throwIfNotInitialized('getCurrentISO');
+    try {
+      return CameraPlatform.instance.getCurrentISO(_cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Gets the exposure description
+  ///
+  /// Returns ExposureDescription
+  Future<ExposureDescription?> getExposureDescription(int cameraId) async {
+    try {
+      return await CameraPlatform.instance.getExposureDescription(cameraId);
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Sets the exposure time (shutter speed) for the selected camera.
+  ///
+  /// The camera must be in manual exposure mode first:
+  /// ```dart
+  /// await controller.setExposureMode(ExposureMode.manual);
+  /// await controller.setExposureTime(1000000); // 1/1000s = 1ms
+  /// ```
+  ///
+  /// The supplied [exposureTime] value should be in nanoseconds and between
+  /// the minimum and maximum values obtained through [getMinExposureTime]
+  /// and [getMaxExposureTime] respectively.
+  ///
+  /// Common exposure times:
+  /// - 1/20000s = 50000 ns (freeze fast action, bright light)
+  /// - 1/12000s = 83,333 ns (freeze fast action, bright light)
+  /// - 1/8000s = 125,000 ns (freeze fast action, bright light)
+  /// - 1/2000s = 500,000 ns (sports photography)
+  /// - 1/1000s = 1,000,000 ns (general action)
+  /// - 1/500s = 2,000,000 ns (handheld, good light)
+  /// - 1/250s = 4,000,000 ns (general purpose)
+  /// - 1/125s = 8,000,000 ns (portraits)
+  /// - 1/60s = 16,666,667 ns (indoor, no flash)
+  /// - 1/30s = 33,333,333 ns (low light)
+  /// - 1/15s = 66,666,667 ns (tripod recommended)
+  ///
+  /// [iso] is optional. If provided, it sets the ISO value simultaneously.
+  /// If not provided, the current ISO is maintained.
+  ///
+  /// Returns the actual exposure time that was set in nanoseconds,
+  /// and exposure ISO.
+  ///
+  /// Throws a [CameraException] when:
+  /// - Manual exposure is not supported
+  /// - The camera is not in manual exposure mode
+  /// - An illegal exposure time value is supplied
+  Future<ExposureStateValue?> setExposureTime({
+    int? exposureTime,
+    double? iso,
+  }) async {
+    if (exposureTime == null && iso == null) {
+      return null;
+    }
+    _throwIfNotInitialized('setExposureTime');
+
+    // Validate exposure time is in range
+    if (exposureTime != null) {
+      final List<int> range = await Future.wait(<Future<int>>[
+        getMinExposureTime(),
+        getMaxExposureTime(),
+      ]);
+
+      if (range[0] == -1 || range[1] == -1) {
+        throw CameraException(
+          'manualExposureNotSupported',
+          'Manual exposure time control is not supported on this device.',
+        );
+      }
+
+      if (exposureTime < range[0] || exposureTime > range[1]) {
+        throw CameraException(
+          'exposureTimeOutOfBounds',
+          'The provided exposure time ($exposureTime ns) was outside the supported range '
+              '(${range[0]} - ${range[1]} ns) for this device.',
+        );
+      }
+    }
+
+    // Validate exposure ISO is in range
+    if (iso != null) {
+      final List<double> range = await Future.wait(<Future<double>>[
+        getMinISO(),
+        getMaxISO(),
+      ]);
+
+      if (range[0] == -1 || range[1] == -1) {
+        throw CameraException(
+          'manualExposureNotSupported',
+          'Manual exposure ISO control is not supported on this device.',
+        );
+      }
+
+      if (iso < range[0] || iso > range[1]) {
+        throw CameraException(
+          'exposureTimeOutOfBounds',
+          'The provided exposure ISO ($iso) was outside the supported range '
+              '(${range[0]} - ${range[1]}) for this device.',
+        );
+      }
+    }
+
+    try {
+      return CameraPlatform.instance.setExposureTime(
+        _cameraId,
+        exposureTime: exposureTime,
+        iso: iso,
+      );
+    } on PlatformException catch (e) {
+      throw CameraException(e.code, e.message);
+    }
+  }
+
+  /// Helper method to get common exposure time presets
+  static Map<String, int> get commonExposureTimes => {
+    '1/20000': 50000, // Very fast
+    '1/12000': 83333,
+    '1/8000': 125000, // Very fast
+    '1/4000': 250000,
+    '1/2000': 500000, // Sports
+    '1/1000': 1000000, // Action
+    '1/500': 2000000,
+    '1/250': 4000000, // General
+    '1/125': 8000000, // Portraits
+    '1/60': 16666667, // Indoor
+    '1/30': 33333333, // Low light
+    '1/15': 66666667,
+  };
+
   /// Check whether the camera platform supports image streaming.
   bool supportsImageStreaming() =>
       CameraPlatform.instance.supportsImageStreaming();

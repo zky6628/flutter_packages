@@ -58,6 +58,12 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
   double _minAvailableExposureOffset = 0.0;
   double _maxAvailableExposureOffset = 0.0;
   double _currentExposureOffset = 0.0;
+  double _minExposureTime = 0.0;
+  double _maxExposureTime = 0.0;
+  double _currentExposureTime = 0.0;
+  double _minExposureIso = 0.0;
+  double _maxExposureIso = 0.0;
+  double _currentExposureIso = 0.0;
   late AnimationController _flashModeControlRowAnimationController;
   late Animation<double> _flashModeControlRowAnimation;
   late AnimationController _exposureModeControlRowAnimationController;
@@ -426,10 +432,11 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                   ),
                 ],
               ),
-              const Center(child: Text('Exposure Offset')),
+              const Center(child: Text('Exposure Setting')),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
+                  const Center(child: Text('Offset')),
                   Text(_minAvailableExposureOffset.toString()),
                   Slider(
                     value: _currentExposureOffset,
@@ -443,6 +450,40 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                         : setExposureOffset,
                   ),
                   Text(_maxAvailableExposureOffset.toString()),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  const Center(child: Text('Time')),
+                  Text(_minExposureTime.toString()),
+                  Slider(
+                    value: _currentExposureTime,
+                    min: _minExposureTime,
+                    max: _maxExposureTime,
+                    label: _currentExposureTime.toString(),
+                    onChanged: _minExposureTime == _maxExposureTime
+                        ? null
+                        : setExposureTime,
+                  ),
+                  Text(_maxExposureTime.toString()),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  const Center(child: Text('ISO')),
+                  Text(_minExposureIso.toString()),
+                  Slider(
+                    value: _currentExposureIso,
+                    min: _minExposureIso,
+                    max: _maxExposureIso,
+                    label: _currentExposureIso.toString(),
+                    onChanged: _minExposureIso == _maxExposureIso
+                        ? null
+                        : setExposureIso,
+                  ),
+                  Text(_maxExposureIso.toString()),
                 ],
               ),
             ],
@@ -678,6 +719,36 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
                     .then(
                       (double value) => _maxAvailableExposureOffset = value,
                     ),
+                CameraPlatform.instance
+                    .getMinExposureTime(cameraController.cameraId)
+                    .then(
+                      (int value) => _minExposureTime = value.toDouble(),
+                ),
+                CameraPlatform.instance
+                    .getMaxExposureTime(cameraController.cameraId)
+                    .then(
+                      (int value) => _maxExposureTime = value >= 50000000 ? 50000000 : value.toDouble(),
+                ),
+                CameraPlatform.instance
+                    .getMinISO(cameraController.cameraId)
+                    .then(
+                      (double value) => _minExposureIso = value,
+                ),
+                CameraPlatform.instance
+                    .getMaxISO(cameraController.cameraId)
+                    .then(
+                      (double value) => _maxExposureIso = value,
+                ),
+                CameraPlatform.instance
+                    .getCurrentExposureTime(cameraController.cameraId)
+                    .then(
+                      (int value) => _currentExposureTime = value.toDouble(),
+                ),
+                CameraPlatform.instance
+                    .getCurrentISO(cameraController.cameraId)
+                    .then(
+                      (double value) => _currentExposureIso = value,
+                ),
               ]
             : <Future<Object?>>[],
         CameraPlatform.instance
@@ -712,6 +783,8 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
           _showCameraException(e);
       }
     }
+
+    debugPrint("-----Exposure-------time:$_currentExposureTime---iso:$_currentExposureIso");
 
     if (mounted) {
       setState(() {});
@@ -976,6 +1049,51 @@ class _CameraExampleHomeState extends State<CameraExampleHome>
     });
     try {
       offset = await controller!.setExposureOffset(offset);
+      final double bb = await CameraPlatform.instance.getCurrentISO(controller!.cameraId);
+      final int cc = await CameraPlatform.instance.getCurrentExposureTime(controller!.cameraId);
+      final ExposureDescription dd = await CameraPlatform.instance.getExposureDescription(controller!.cameraId);
+      debugPrint('~~~setExposureOffset Value~~~:$bb--$cc~~~~~~~:${offset}');
+      debugPrint('~~~setExposureOffset Value22~~~:$dd}');
+    } on CameraException catch (e) {
+      _showCameraException(e);
+      rethrow;
+    }
+  }
+
+  Future<void> setExposureTime(double offset) async {
+    if (controller == null) {
+      return;
+    }
+
+    setState(() {
+      _currentExposureTime = offset;
+    });
+    try {
+      final ExposureStateValue tempResult = await controller!.setExposureTime(expTime: offset.toInt());
+      offset = tempResult.expoTimeNs.toDouble();
+      final double bb = await CameraPlatform.instance.getCurrentISO(controller!.cameraId);
+      final int cc = await CameraPlatform.instance.getCurrentExposureTime(controller!.cameraId);
+      debugPrint('~~~setExposureTime Value~~~:$bb--$cc-----${tempResult.expoTimeNs}');
+    } on CameraException catch (e) {
+      _showCameraException(e);
+      rethrow;
+    }
+  }
+
+  Future<void> setExposureIso(double offset) async {
+    if (controller == null) {
+      return;
+    }
+
+    setState(() {
+      _currentExposureIso = offset;
+    });
+    try {
+      final ExposureStateValue tempResult = await controller!.setExposureTime(iso: offset);
+      offset = tempResult.expoISO;
+      final double bb = await CameraPlatform.instance.getCurrentISO(controller!.cameraId);
+      final int cc = await CameraPlatform.instance.getCurrentExposureTime(controller!.cameraId);
+      debugPrint('~~~setExposureTime Value~~~:$bb--$cc-----${tempResult.expoTimeNs}');
     } on CameraException catch (e) {
       _showCameraException(e);
       rethrow;

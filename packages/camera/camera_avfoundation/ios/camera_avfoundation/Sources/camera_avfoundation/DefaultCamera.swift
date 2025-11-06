@@ -27,6 +27,84 @@ final class DefaultCamera: NSObject, Camera {
   var maximumExposureOffset: CGFloat { CGFloat(captureDevice.maxExposureTargetBias) }
   var minimumAvailableZoomFactor: CGFloat { captureDevice.minAvailableVideoZoomFactor }
   var maximumAvailableZoomFactor: CGFloat { captureDevice.maxAvailableVideoZoomFactor }
+  
+  //   var minimumExposureTime: Int64 { get }
+  //  var maximumExposureTime: Int64 { get }
+  //  var currentExposureTime: Int64 { get }
+  //
+  //  var minimumISO: CGFloat { get }
+  //  var maximumISO: CGFloat { get }
+  //  var currentISO: CGFloat { get }
+  
+  var minimumExposureTime: Int64 {
+    // CMTime to nanoseconds
+    let minDuration = captureDevice.activeFormat.format.minExposureDuration
+    if minDuration == CMTime.invalid || minDuration == CMTime.indefinite {
+      return -1
+    }
+    return Int64(minDuration.seconds * 1_000_000_000)
+  }
+  
+  var maximumExposureTime: Int64 {
+    // CMTime to nanoseconds
+    let maxDuration = captureDevice.activeFormat.format.maxExposureDuration
+    if maxDuration == CMTime.invalid || maxDuration == CMTime.indefinite {
+      return -1
+    }
+    return Int64(maxDuration.seconds * 1_000_000_000)
+  }
+  
+  var currentExposureTime: Int64 {
+    let duration = captureDevice.exposureDuration()
+    if duration == CMTime.invalid || duration == CMTime.indefinite {
+      return -1
+    }
+    return Int64(duration.seconds * 1_000_000_000)
+  }
+  
+  var minimumISO: CGFloat { CGFloat(captureDevice.activeFormat.format.minISO) }
+  var maximumISO: CGFloat { CGFloat(captureDevice.activeFormat.format.maxISO) }
+  var currentISO: CGFloat { CGFloat(captureDevice.iso()) }
+
+  var getCurrentExposureMode: FCPPlatformExposureMode {
+    var tempExposurModel = FCPPlatformExposureMode.auto;
+    switch captureDevice.currentExposureMode {
+    case .locked:
+      tempExposurModel = FCPPlatformExposureMode.locked;
+    case .autoExpose:
+      tempExposurModel = FCPPlatformExposureMode.locked;
+      break
+    case .continuousAutoExposure:
+      tempExposurModel = FCPPlatformExposureMode.auto
+      break
+    case .custom:
+      tempExposurModel = FCPPlatformExposureMode.manual
+      break
+    @unknown default:
+      assertionFailure("Unknown exposure mode")
+    }
+    return tempExposurModel
+  }
+
+  var getExposureDescription: FCPPlatformCameraExposureDescription {
+    let currentExposureMode = getCurrentExposureMode;
+    let description = FCPPlatformCameraExposureDescription.make(
+      withCurrentExpoMode: currentExposureMode,
+      currentExpoOffset: Double(captureDevice.device.exposureTargetBias),
+      minExpoOffset: minimumExposureOffset,
+      maxExpoOffset: maximumExposureOffset,
+      currentExpoISO: currentISO,
+      minExpoISO: minimumISO,
+      maxExpoISO: maximumISO,
+      currentExpoTimeNs: NSInteger(currentExposureTime),
+      minExpoTimeNs: NSInteger(minimumExposureTime),
+      maxExpoTimeNs: NSInteger(maximumExposureTime)
+    );
+    return description
+  }
+
+
+
 
   /// The queue on which `latestPixelBuffer` property is accessed.
   /// To avoid unnecessary contention, do not access `latestPixelBuffer` on the `captureSessionQueue`.
@@ -807,6 +885,12 @@ final class DefaultCamera: NSObject, Camera {
       } else {
         captureDevice.setExposureMode(.autoExpose)
       }
+    case .manual:
+      if captureDevice.isExposureModeSupported(.custom) {
+        captureDevice.setExposureMode(.custom)
+      } else {
+        captureDevice.setExposureMode(.autoExpose)
+      }
     @unknown default:
       assertionFailure("Unknown exposure mode")
     }
@@ -870,6 +954,30 @@ final class DefaultCamera: NSObject, Camera {
     // Retrigger auto focus
     applyFocusMode()
     completion(nil)
+  }
+  
+  func setExposureTime(_ exposureTimeNs: Int64?, iso: Float?, completion: @escaping (FCPPlatformExposureStateValue?, FlutterError?) -> Void) -> (Int64, Float) {
+//    guard exposureMode == .manual else {
+//      completion(
+//        FlutterError(
+//        code: "setExposureTimeFailed",
+//        message: "Camera must be in manual exposure mode to set exposure time",
+//        details: nil))
+//    }
+    
+    // Convert nanoseconds to CMTime
+    let seconds = (exposureTimeNs != nil) ? Double(exposureTimeNs!) / 1_000_000_000.0 : captureDevice.exposureDuration().seconds
+    let duration = CMTimeMakeWithSeconds(seconds, preferredTimescale: 1_000_000_000)
+
+    // Use provided ISO or current ISO
+    let targetISO = iso ?? captureDevice.iso()
+    
+    try? captureDevice.lockForConfiguration()
+    captureDevice.setExposureModeCustomWithDuration(duration, iso: targetISO, completionHandler: nil)
+    captureDevice.unlockForConfiguration()
+    
+    // Return actual value that was set
+    return (Int64(duration.seconds * 1_000_000_000), targetISO)
   }
 
   private func applyFocusMode() {

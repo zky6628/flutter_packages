@@ -52,8 +52,10 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)setExposurePointOfInterest:(CGPoint)point;
 @property(nonatomic, readonly) float minExposureTargetBias;
 @property(nonatomic, readonly) float maxExposureTargetBias;
+@property(nonatomic, readonly) AVCaptureExposureMode currentExposureMode;
 - (void)setExposureTargetBias:(float)bias completionHandler:(void (^_Nullable)(CMTime))handler;
 - (BOOL)isExposureModeSupported:(AVCaptureExposureMode)mode;
+- (void)setExposureModeCustomWithDuration:(CMTime)duration ISO:(float)ISO completionHandler:(void (^_Nullable)(CMTime))handler;
 
 // Zoom
 @property(nonatomic, readonly) CGFloat maxAvailableVideoZoomFactor;

@@ -141,6 +141,30 @@ class FakeController extends ValueNotifier<CameraValue>
 
   @override
   bool supportsImageStreaming() => true;
+
+  @override
+  Future<int> getCurrentExposureTime() async => 1;
+
+  @override
+  Future<double> getCurrentISO()  async => 1.0;
+
+  @override
+  Future<int> getMaxExposureTime()  async => 1;
+
+  @override
+  Future<double> getMaxISO()  async => 1.0;
+
+  @override
+  Future<int> getMinExposureTime() async => 1;
+
+  @override
+  Future<double> getMinISO()  async => 1.0;
+
+  @override
+  Future<ExposureDescription?> getExposureDescription(int cameraId) async => null;
+
+  @override
+  Future<ExposureStateValue?> setExposureTime({int? exposureTime, double? iso}) async => null;
 }
 
 void main() {

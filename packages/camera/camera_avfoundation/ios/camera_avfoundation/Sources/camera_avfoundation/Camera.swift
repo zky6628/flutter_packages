@@ -34,6 +34,16 @@ protocol Camera: FlutterTexture, AVCaptureVideoDataOutputSampleBufferDelegate,
   var minimumExposureOffset: CGFloat { get }
   var maximumExposureOffset: CGFloat { get }
 
+  var minimumExposureTime: Int64 { get }
+  var maximumExposureTime: Int64 { get }
+  var currentExposureTime: Int64 { get }
+
+  var minimumISO: CGFloat { get }
+  var maximumISO: CGFloat { get }
+  var currentISO: CGFloat { get }
+
+  var getExposureDescription: FCPPlatformCameraExposureDescription { get }
+
   func setUpCaptureSessionForAudioIfNeeded()
 
   /// Informs the Dart side of the plugin of the current camera state and capabilities.
@@ -114,6 +124,8 @@ protocol Camera: FlutterTexture, AVCaptureVideoDataOutputSampleBufferDelegate,
     _ cameraName: String,
     withCompletion: @escaping (_ error: FlutterError?) -> Void
   )
+
+  func setExposureTime(_ exposureTimeNs: Int64?, iso: Float?, completion: @escaping (FCPPlatformExposureStateValue?, FlutterError?) -> Void) -> (Int64, Float)
 
   func startImageStream(
     with: FlutterBinaryMessenger, completion: @escaping (_ error: FlutterError?) -> Void)

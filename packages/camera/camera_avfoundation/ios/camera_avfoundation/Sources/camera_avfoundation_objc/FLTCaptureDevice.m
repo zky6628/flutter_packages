@@ -118,12 +118,20 @@
   return self.device.maxExposureTargetBias;
 }
 
+- (AVCaptureExposureMode)currentExposureMode {
+  return self.device.exposureMode;
+}
+
 - (void)setExposureTargetBias:(float)bias completionHandler:(void (^)(CMTime))handler {
   [self.device setExposureTargetBias:bias completionHandler:handler];
 }
 
 - (BOOL)isExposureModeSupported:(AVCaptureExposureMode)mode {
   return [self.device isExposureModeSupported:mode];
+}
+
+- (void)setExposureModeCustomWithDuration:(CMTime)duration ISO:(float)ISO completionHandler:(void (^_Nullable)(CMTime))handler {
+  [self.device setExposureModeCustomWithDuration: duration ISO: ISO completionHandler: handler];
 }
 
 // Zoom

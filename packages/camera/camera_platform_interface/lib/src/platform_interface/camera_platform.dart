@@ -319,4 +319,68 @@ abstract class CameraPlatform extends PlatformInterface {
   Future<void> setImageFileFormat(int cameraId, ImageFileFormat format) {
     throw UnimplementedError('setImageFileFormat() is not implemented.');
   }
+
+  /// Gets the minimum supported exposure time for the selected camera in nanoseconds.
+  ///
+  /// Returns -1 if manual exposure time control is not supported.
+  Future<int> getMinExposureTime(int cameraId) {
+    throw UnimplementedError('getMinExposureTime() is not implemented.');
+  }
+
+  /// Gets the maximum supported exposure time for the selected camera in nanoseconds.
+  ///
+  /// Returns -1 if manual exposure time control is not supported.
+  Future<int> getMaxExposureTime(int cameraId) {
+    throw UnimplementedError('getMaxExposureTime() is not implemented.');
+  }
+
+  /// Gets the current exposure time of the camera in nanoseconds.
+  Future<int> getCurrentExposureTime(int cameraId) {
+    throw UnimplementedError('getCurrentExposureTime() is not implemented.');
+  }
+
+  /// Gets the minimum supported ISO value for the selected camera.
+  ///
+  /// Returns -1 if manual ISO control is not supported.
+  Future<double> getMinISO(int cameraId) {
+    throw UnimplementedError('getMinISO() is not implemented.');
+  }
+
+  /// Gets the maximum supported ISO value for the selected camera.
+  ///
+  /// Returns -1 if manual ISO control is not supported.
+  Future<double> getMaxISO(int cameraId) {
+    throw UnimplementedError('getMaxISO() is not implemented.');
+  }
+
+  /// Gets the current ISO value of the camera.
+  Future<double> getCurrentISO(int cameraId) {
+    throw UnimplementedError('getCurrentISO() is not implemented.');
+  }
+
+  /// Gets the exposure description
+  ///
+  /// Returns ExposureDescription
+  Future<ExposureDescription> getExposureDescription(int cameraId) {
+    throw UnimplementedError('getExposureDescription() is not implemented.');
+  }
+
+  /// Sets the exposure time (shutter speed) for the selected camera.
+  ///
+  /// The camera must be in manual exposure mode (ExposureMode.manual) first.
+  ///
+  /// The supplied [exposureTime] value should be in nanoseconds and between
+  /// the minimum and maximum times obtained through `getMinExposureTime`
+  /// and `getMaxExposureTime` respectively.
+  ///
+  /// [iso] is optional. If provided, it sets the ISO value simultaneously.
+  /// If not provided, the current ISO is maintained.
+  ///
+  /// Returns the actual exposure time that was set in nanoseconds.
+  ///
+  /// Throws a [CameraException] when an illegal value is supplied or
+  /// manual exposure is not supported.
+  Future<ExposureStateValue> setExposureTime(int cameraId, {int? exposureTime, double? iso}) {
+    throw UnimplementedError('setExposureTime() is not implemented.');
+  }
 }
